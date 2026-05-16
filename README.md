@@ -174,4 +174,4 @@ CI/CD automatically builds platform binaries on push and PR, and publishes tagge
 
 ## License
 
-MIT
+[MIT](LICENSE)
