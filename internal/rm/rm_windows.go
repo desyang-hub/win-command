@@ -1,3 +1,5 @@
+//go:build windows
+
 package rm
 
 import (
@@ -5,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"syscall"
 	"unsafe"
 
@@ -53,33 +54,20 @@ func remove(file string, recursive, force, permanent bool) error {
 		return err
 	}
 
-	if runtime.GOOS == "windows" {
-		if info.IsDir() && !recursive {
-			if !force {
-				return fmt.Errorf("cannot remove '%s': it is a directory (use -r)", path)
-			}
-			return nil
+	if info.IsDir() && !recursive {
+		if !force {
+			return fmt.Errorf("cannot remove '%s': it is a directory (use -r)", path)
 		}
-
-		if permanent {
-			return deletePermanent(path, info.IsDir())
-		}
-		return moveToTrash(path, info.IsDir())
+		return nil
 	}
 
-	if info.IsDir() {
-		if recursive {
-			return os.RemoveAll(path)
-		}
-		return fmt.Errorf("cannot remove '%s': it is a directory (use -r)", path)
+	if permanent {
+		return deletePermanent(path, info.IsDir())
 	}
-	return os.Remove(path)
+	return moveToTrash(path, info.IsDir())
 }
 
 func moveToTrash(path string, isDir bool) error {
-	if runtime.GOOS != "windows" {
-		return moveToTrashLocal(path, isDir)
-	}
 	if isDir {
 		return moveToTrashRecursively(path)
 	}
@@ -96,10 +84,10 @@ func moveToRecycleBin(path string) error {
 	}
 
 	var op shOp
-	op.wFunc     = FO_DELETE
-	op.pFrom      = uintptr(unsafe.Pointer(&pFrom[0]))
-	op.fFlags    = FOF_ALLOWUNDO | FOF_NOERRORSDIALOG
-	op.pTo        = 0
+	op.wFunc = FO_DELETE
+	op.pFrom = uintptr(unsafe.Pointer(&pFrom[0]))
+	op.fFlags = FOF_ALLOWUNDO | FOF_NOERRORSDIALOG
+	op.pTo = 0
 
 	ret, _, lastErr := proc.Call(uintptr(unsafe.Pointer(&op)))
 	if ret != 0 {
@@ -146,40 +134,24 @@ func deletePermanent(path string, isDir bool) error {
 	return os.Remove(path)
 }
 
-func moveToTrashLocal(path string, isDir bool) error {
-	trashDir := filepath.Join(filepath.Dir(path), ".trash")
-	if err := os.MkdirAll(trashDir, 0755); err != nil {
-		return err
-	}
-
-	name := filepath.Base(path)
-	dest := filepath.Join(trashDir, name)
-	if _, err := os.Stat(dest); err == nil {
-		dest = filepath.Join(trashDir, name+"."+fmt.Sprint(os.Getpid()))
-	}
-
-	return os.Rename(path, dest)
-}
-
 // Windows Shell API constants
 const (
 	FO_DELETE          = 0x0003
-	FOF_ALLOWUNDO      = 0x0040  // CRITICAL: must be set to recycle the file!
+	FOF_ALLOWUNDO      = 0x0040 // CRITICAL: must be set to recycle the file!
 	FOF_NOCONFIRMATION = 0x0010
 	FOF_NOERRORSDIALOG = 0x1000
 )
 
 // shOp matches SHFILEOPSTRUCTW memory layout (64-bit).
-// Only the fields used in delete operations are included.
 type shOp struct {
-	hwnd       uintptr
-	wFunc      uint32
-	pFrom      uintptr
-	pTo        uintptr
-	fFlags     uint16
-	fAborted   byte
-	_          [3]byte
-	fileName   uintptr
-	fAborted2  byte
-	_          [7]byte
+	hwnd      uintptr
+	wFunc     uint32
+	pFrom     uintptr
+	pTo       uintptr
+	fFlags    uint16
+	fAborted  byte
+	_         [3]byte
+	fileName  uintptr
+	fAborted2 byte
+	_         [7]byte
 }
