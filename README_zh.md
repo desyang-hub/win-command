@@ -29,13 +29,13 @@ Windows 版的 Linux 风格命令行工具，用 Go 实现。
 ```bash
 git clone https://github.com/desyang-hub/win-command.git
 cd win-command
-go build -o win.exe ./cmd/main.go
+go build -o win.exe ./win/main.go
 ```
 
 ### 方式三：Go install
 
 ```bash
-go install github.com/desyang-hub/win-command/cmd@latest
+go install github.com/desyang-hub/win-command/win@latest
 ```
 
 ## 命令参考
@@ -163,13 +163,13 @@ win-command/
 
 ```bash
 # 本地构建
-go build -o win.exe ./cmd/main.go
+go build -o win.exe ./win/main.go
 
 # 交叉编译 Windows 64位
-GOOS=windows GOARCH=amd64 go build -o win-amd64.exe ./cmd/main.go
+GOOS=windows GOARCH=amd64 go build -o win-amd64.exe ./win/main.go
 
 # 交叉编译 Windows ARM64
-GOOS=windows GOARCH=arm64 go build -o win-arm64.exe ./cmd/main.go
+GOOS=windows GOARCH=arm64 go build -o win-arm64.exe ./win/main.go
 ```
 
 CI/CD 自动在推送和 PR 时构建所有平台的二进制文件并上传到 Release。

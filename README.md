@@ -29,13 +29,13 @@ Download the latest `win.exe` from [Releases](https://github.com/desyang-hub/win
 ```bash
 git clone https://github.com/desyang-hub/win-command.git
 cd win-command
-go build -o win.exe ./cmd/main.go
+go build -o win.exe ./win/main.go
 ```
 
 ### Option 3: Go install
 
 ```bash
-go install github.com/desyang-hub/win-command/cmd@latest
+go install github.com/desyang-hub/win-command/win@latest
 ```
 
 ## Command Reference
@@ -161,13 +161,13 @@ Directories are processed recursively, each file gets its own undo record in the
 
 ```bash
 # Local build
-go build -o win.exe ./cmd/main.go
+go build -o win.exe ./win/main.go
 
 # Cross-compile Windows 64-bit
-GOOS=windows GOARCH=amd64 go build -o win-amd64.exe ./cmd/main.go
+GOOS=windows GOARCH=amd64 go build -o win-amd64.exe ./win/main.go
 
 # Cross-compile Windows ARM64
-GOOS=windows GOARCH=arm64 go build -o win-arm64.exe ./cmd/main.go
+GOOS=windows GOARCH=arm64 go build -o win-arm64.exe ./win/main.go
 ```
 
 CI/CD automatically builds platform binaries on push and PR, and publishes tagged releases.

@@ -31,7 +31,7 @@ jobs:
         run: go test -v -race -count=1 ./...
 
       - name: Build (Linux)
-        run: go build -o /dev/null ./cmd/main.go
+        run: go build -o /dev/null ./win/main.go
 
   format:
     runs-on: ubuntu-latest
