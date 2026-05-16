@@ -2,6 +2,8 @@
 
 Linux-style CLI tools for Windows, written in Go.
 
+> [English](README.md) | [中文](README_zh.md)
+
 ## Overview
 
 Bring familiar Linux commands to Windows. Solves the gap between Windows built-in commands and POSIX tools in usability and consistency. All commands are prefixed with `win` and powered by native Windows Shell APIs.

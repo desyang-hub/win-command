@@ -2,7 +2,7 @@
 
 Windows 版的 Linux 风格命令行工具，用 Go 实现。
 
-> [English](README.md) | 中文
+> [English](README.md) | [中文](README_zh.md)
 
 ## 概述
 
