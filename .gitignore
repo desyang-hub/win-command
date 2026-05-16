@@ -1,0 +1,6 @@
+*.exe
+*.o
+*.dynlib
+build/
+dist/
+.DS_Store
