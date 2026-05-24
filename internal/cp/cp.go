@@ -14,9 +14,9 @@ var Cmd = &cli.Command{
 	Name:  "cp",
 	Usage: "Copy files and directories",
 	Flags: []cli.Flag{
-		&cli.BoolFlag{Name: "recursive, r", Usage: "Copy directories recursively"},
-		&cli.BoolFlag{Name: "interactive, i", Usage: "Prompt before overwrite"},
-		&cli.BoolFlag{Name: "verbose, v", Usage: "Print source/destination paths"},
+		&cli.BoolFlag{Name: "recursive", Aliases: []string{"r"}, Usage: "Copy directories recursively"},
+		&cli.BoolFlag{Name: "interactive", Aliases: []string{"i"}, Usage: "Prompt before overwrite"},
+		&cli.BoolFlag{Name: "verbose", Aliases: []string{"v"}, Usage: "Print source/destination paths"},
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		recursive := cmd.Bool("recursive")

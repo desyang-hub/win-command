@@ -19,21 +19,13 @@ func createShortcut(target, linkName string) error {
 		linkName = linkName + ".lnk"
 	}
 
-	// Escape single quotes for PowerShell
-	et := strings.ReplaceAll(target, "'", "''")
-	el := strings.ReplaceAll(linkName, "'", "''")
-	edir := strings.ReplaceAll(filepath.Dir(target), "'", "''")
+	psScript := `$shell = New-Object -ComObject WScript.Shell
+$sc = $shell.CreateShortcut($args[0])
+$sc.TargetPath = $args[1]
+$sc.WorkingDirectory = $args[2]
+$sc.Save()`
 
-	psScript := fmt.Sprintf(
-		"$shell = New-Object -ComObject WScript.Shell; "+
-			"$sc = $shell.CreateShortcut('%s'); "+
-			"$sc.TargetPath = '%s'; "+
-			"$sc.WorkingDirectory = '%s'; "+
-			"$sc.Save()",
-		el, et, edir,
-	)
-
-	cmd := exec.Command("powershell", "-Command", psScript)
+	cmd := exec.Command("powershell", "-NoProfile", "-Command", psScript, linkName, target, filepath.Dir(target))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to create shortcut '%s' -> '%s': %s", linkName, target, strings.TrimSpace(string(output)))

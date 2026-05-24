@@ -5,7 +5,6 @@ package ln
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/urfave/cli/v3"

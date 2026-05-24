@@ -12,7 +12,7 @@ var Cmd = &cli.Command{
 	Name:  "date",
 	Usage: "Display current date and time",
 	Flags: []cli.Flag{
-		&cli.StringFlag{Name: "format, f", Value: "", Usage: "Custom format string"},
+		&cli.StringFlag{Name: "format", Aliases: []string{"f"}, Value: "", Usage: "Custom format string"},
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		format := cmd.String("format")

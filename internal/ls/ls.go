@@ -14,8 +14,8 @@ var Cmd = &cli.Command{
 	Name:  "ls",
 	Usage: "List directory contents",
 	Flags: []cli.Flag{
-		&cli.BoolFlag{Name: "long, l", Usage: "Long listing format"},
-		&cli.BoolFlag{Name: "all, a", Usage: "Include hidden files"},
+		&cli.BoolFlag{Name: "long", Aliases: []string{"l"}, Usage: "Long listing format"},
+		&cli.BoolFlag{Name: "all", Aliases: []string{"a"}, Usage: "Include hidden files"},
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		long := cmd.Bool("long")
@@ -28,9 +28,13 @@ var Cmd = &cli.Command{
 
 		for _, file := range files {
 			if long {
-				listLong(file, all)
+				if err := listLong(file, all); err != nil {
+					fmt.Fprintln(os.Stderr, err)
+				}
 			} else {
-				listShort(file, all)
+				if err := listShort(file, all); err != nil {
+					fmt.Fprintln(os.Stderr, err)
+				}
 			}
 		}
 		return nil

@@ -14,7 +14,7 @@ var Head = &cli.Command{
 	Name:  "head",
 	Usage: "Display the first lines of a file",
 	Flags: []cli.Flag{
-		&cli.IntFlag{Name: "lines, n", Value: 10, Usage: "Number of lines"},
+		&cli.IntFlag{Name: "lines", Aliases: []string{"n"}, Value: 10, Usage: "Number of lines"},
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		n := cmd.Int("lines")
@@ -43,7 +43,7 @@ var Tail = &cli.Command{
 	Name:  "tail",
 	Usage: "Display the last lines of a file",
 	Flags: []cli.Flag{
-		&cli.IntFlag{Name: "lines, n", Value: 10, Usage: "Number of lines"},
+		&cli.IntFlag{Name: "lines", Aliases: []string{"n"}, Value: 10, Usage: "Number of lines"},
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		n := cmd.Int("lines")

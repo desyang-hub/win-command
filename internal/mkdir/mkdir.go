@@ -12,8 +12,8 @@ var Cmd = &cli.Command{
 	Name:  "mkdir",
 	Usage: "Create directories",
 	Flags: []cli.Flag{
-		&cli.BoolFlag{Name: "parents, p", Usage: "Create parent directories as needed"},
-		&cli.BoolFlag{Name: "verbose, v", Usage: "Print each created directory"},
+		&cli.BoolFlag{Name: "parents", Aliases: []string{"p"}, Usage: "Create parent directories as needed"},
+		&cli.BoolFlag{Name: "verbose", Aliases: []string{"v"}, Usage: "Print each created directory"},
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		parents := cmd.Bool("parents")

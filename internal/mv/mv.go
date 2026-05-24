@@ -15,7 +15,7 @@ var Cmd = &cli.Command{
 	Name:  "mv",
 	Usage: "Move/rename files or directories",
 	Flags: []cli.Flag{
-		&cli.BoolFlag{Name: "interactive, i", Usage: "Prompt before overwrite"},
+		&cli.BoolFlag{Name: "interactive", Aliases: []string{"i"}, Usage: "Prompt before overwrite"},
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		interactive := cmd.Bool("interactive")
@@ -61,16 +61,28 @@ func moveFile(src, dst string, interactive bool) error {
 	src, _ = filepath.Abs(src)
 	dst, _ = filepath.Abs(dst)
 
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
 	if sameDrive(src, dst) {
 		if err := os.Rename(src, dst); err == nil {
 			return nil
 		}
 	}
 
-	if err := copyFile(src, dst); err != nil {
-		return err
+	// Cross-drive: copy then remove
+	var copyErr error
+	if srcInfo.IsDir() {
+		copyErr = copyDir(src, dst)
+	} else {
+		copyErr = copySingleFile(src, dst)
 	}
-	if err := os.Remove(src); err != nil {
+	if copyErr != nil {
+		return copyErr
+	}
+	if err := os.RemoveAll(src); err != nil {
 		os.Remove(dst)
 		return err
 	}
@@ -84,7 +96,7 @@ func sameDrive(src, dst string) bool {
 	return filepath.VolumeName(src) == filepath.VolumeName(dst)
 }
 
-func copyFile(src, dst string) error {
+func copySingleFile(src, dst string) error {
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return err
@@ -105,6 +117,38 @@ func copyFile(src, dst string) error {
 	if srcInfo != nil {
 		os.Chmod(dst, srcInfo.Mode())
 		os.Chtimes(dst, srcInfo.ModTime(), srcInfo.ModTime())
+	}
+	return nil
+}
+
+func copyDir(src, dst string) error {
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(dst, srcInfo.Mode()); err != nil {
+		return err
+	}
+
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+
+		if entry.IsDir() {
+			if err := copyDir(srcPath, dstPath); err != nil {
+				return err
+			}
+		} else {
+			if err := copySingleFile(srcPath, dstPath); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

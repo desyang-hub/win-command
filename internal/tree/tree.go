@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/urfave/cli/v3"
 )
@@ -66,11 +68,10 @@ func printTree(dir, prefix string, depth int, isLast bool) {
 }
 
 func sortEntries(entries []os.DirEntry) {
-	for i := 0; i < len(entries)-1; i++ {
-		for j := i + 1; j < len(entries); j++ {
-			if entries[i].IsDir() && !entries[j].IsDir() {
-				entries[i], entries[j] = entries[j], entries[i]
-			}
+	sort.SliceStable(entries, func(i, j int) bool {
+		if entries[i].IsDir() != entries[j].IsDir() {
+			return entries[i].IsDir()
 		}
-	}
+		return strings.ToLower(entries[i].Name()) < strings.ToLower(entries[j].Name())
+	})
 }

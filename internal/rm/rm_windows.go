@@ -1,4 +1,4 @@
-//go:build windows
+//go:build windows && amd64 || windows && arm64
 
 package rm
 
@@ -17,9 +17,9 @@ var Cmd = &cli.Command{
 	Name:  "rm",
 	Usage: "Remove files or directories (moves to recycle bin by default)",
 	Flags: []cli.Flag{
-		&cli.BoolFlag{Name: "recursive, r", Usage: "Remove directories recursively"},
-		&cli.BoolFlag{Name: "force, f", Usage: "Ignore nonexistent files, never prompt"},
-		&cli.BoolFlag{Name: "permanent, P", Usage: "Permanently delete (skip recycle bin)"},
+		&cli.BoolFlag{Name: "recursive", Aliases: []string{"r"}, Usage: "Remove directories recursively"},
+		&cli.BoolFlag{Name: "force", Aliases: []string{"f"}, Usage: "Ignore nonexistent files, never prompt"},
+		&cli.BoolFlag{Name: "permanent", Aliases: []string{"P"}, Usage: "Permanently delete (skip recycle bin)"},
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		recursive := cmd.Bool("recursive")
@@ -95,7 +95,7 @@ func moveToRecycleBin(path string) error {
 		if lastErr != nil {
 			errStr = lastErr.Error()
 		}
-		return fmt.Errorf("SHFileOperationW failed (code %d, %s): '%s' was permanently deleted instead of recycling", ret, errStr, path)
+		return fmt.Errorf("failed to recycle '%s': SHFileOperationW returned %d%s", path, ret, errStr)
 	}
 	return nil
 }
@@ -107,12 +107,9 @@ func moveToTrashRecursively(path string) error {
 	}
 
 	for _, entry := range entries {
-		if entry.Name() == "." || entry.Name() == ".." {
-			continue
-		}
 		entryPath := filepath.Join(path, entry.Name())
-		info, _ := os.Stat(entryPath)
-		if err := moveToTrash(entryPath, info.IsDir()); err != nil {
+		isDir := entry.IsDir()
+		if err := moveToTrash(entryPath, isDir); err != nil {
 			return err
 		}
 	}
@@ -142,7 +139,8 @@ const (
 	FOF_NOERRORSDIALOG = 0x1000
 )
 
-// shOp matches SHFILEOPSTRUCTW memory layout (64-bit).
+// shOp matches SHFILEOPSTRUCTW memory layout.
+// NOTE: 64-bit only — pointer sizes differ on 386. Do not build for windows/386.
 type shOp struct {
 	hwnd      uintptr
 	wFunc     uint32

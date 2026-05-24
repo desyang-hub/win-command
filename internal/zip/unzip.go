@@ -16,8 +16,8 @@ var ExtractCmd = &cli.Command{
 	Name:  "unzip",
 	Usage: "Extract a zip archive",
 	Flags: []cli.Flag{
-		&cli.StringFlag{Name: "output, o", Usage: "Output directory (default: current)"},
-		&cli.BoolFlag{Name: "verbose, v", Usage: "Show extracted files"},
+		&cli.StringFlag{Name: "output", Aliases: []string{"o"}, Usage: "Output directory (default: current)"},
+		&cli.BoolFlag{Name: "verbose", Aliases: []string{"v"}, Usage: "Show extracted files"},
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		output := cmd.String("output")
@@ -55,9 +55,9 @@ func extractZip(archive, dest string, verbose bool) error {
 }
 
 func extractFile(reader *zip.ReadCloser, file *zip.File, dest string, verbose bool) error {
-	cleanName := filepath.Join(dest, file.Name)
+	cleanName := filepath.Clean(filepath.Join(dest, file.Name))
 	cleanDest := filepath.Clean(dest) + string(filepath.Separator)
-	if !strings.HasPrefix(filepath.Clean(cleanName), cleanDest) && cleanName != cleanDest {
+	if !strings.HasPrefix(cleanName, cleanDest) || cleanName == filepath.Clean(dest) {
 		return fmt.Errorf("illegal path: %s", file.Name)
 	}
 

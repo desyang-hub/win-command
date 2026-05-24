@@ -15,7 +15,7 @@ var Cmd = &cli.Command{
 	Name:  "zip",
 	Usage: "Create a zip archive",
 	Flags: []cli.Flag{
-		&cli.BoolFlag{Name: "recursive, r", Usage: "Include directories recursively"},
+		&cli.BoolFlag{Name: "recursive", Aliases: []string{"r"}, Usage: "Include directories recursively"},
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		recursive := cmd.Bool("recursive")
