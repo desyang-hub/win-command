@@ -4,11 +4,13 @@ package ln
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/urfave/cli/v3"
 )
@@ -33,6 +35,56 @@ $sc.Save()`
 	return nil
 }
 
+// selfElevate restarts the current process with administrator privileges via PowerShell.
+// It is called when symlink creation fails due to insufficient permissions.
+func selfElevate() {
+	exe, err := os.Executable()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Note: elevation failed (%v), try running as administrator manually.\n", err)
+		os.Exit(1)
+	}
+
+	argsStr := marshalPSArray(os.Args[1:])
+
+	psScript := "Start-Process '" + exe + "' -ArgumentList @(" + argsStr + ") -Verb RunAs"
+
+	cmd := exec.Command("powershell", "-NoProfile", "-WindowStyle", "Hidden", "-Command", psScript)
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Note: elevation failed (%v), try running as administrator manually.\n", err)
+	}
+	os.Exit(0)
+}
+
+// marshalPSArray builds a PowerShell array literal from Go args ('arg1','arg2',...).
+func marshalPSArray(args []string) string {
+	var parts []string
+	for _, arg := range args {
+		escaped := strings.ReplaceAll(arg, "'", "''")
+		parts = append(parts, "'"+escaped+"'")
+	}
+	return strings.Join(parts, ",")
+}
+
+// isSymlinkPermissionError checks if the error is a Windows symlink permission denial.
+func isSymlinkPermissionError(err error) bool {
+	msg := strings.ToLower(err.Error())
+	if strings.Contains(msg, "access is denied") {
+		return true
+	}
+	if strings.Contains(msg, "required privilege is not held") {
+		return true
+	}
+	if strings.Contains(msg, "0x5") {
+		return true
+	}
+	// Also check for syscall error with ACCESS_DENIED code
+	var se *os.SyscallError
+	if errors.As(err, &se) && se.Err == syscall.EACCES {
+		return true
+	}
+	return false
+}
+
 // Windows-specific command definition
 var winCmd = &cli.Command{
 	Name:  "ln",
@@ -54,7 +106,14 @@ var winCmd = &cli.Command{
 		linkName, _ := filepath.Abs(files[1])
 
 		if symbolic {
-			return createSymlink(target, linkName)
+			if err := createSymlink(target, linkName); err != nil {
+				if isSymlinkPermissionError(err) {
+					fmt.Fprintf(os.Stderr, "%v\n  Attempting UAC elevation...\n", err)
+					selfElevate()
+				}
+				return err
+			}
+			return nil
 		}
 		if hardLink {
 			return createHardlink(target, linkName)
